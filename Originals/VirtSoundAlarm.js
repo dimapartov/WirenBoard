@@ -65,7 +65,7 @@ var soundAlarmCtrl_cells = {
     },
 };
 
-defineVirtualDevice('soundAlarm', {
+defineVirtualDevice('VirtSoundAlarm', {
     title: "Звуковая сигнализация",
     cells: soundAlarmCtrl_cells
 });

@@ -66,7 +66,7 @@ var soundAlarmCtrl_cells = {
     // add aux properties here //
 };
 
-defineVirtualDevice('soundAlarm', {
+defineVirtualDevice('VirtSoundAlarm', {
     title: "Звуковая сигнализация",
     cells: soundAlarmCtrl_cells
 });
@@ -75,7 +75,7 @@ defineVirtualDevice('soundAlarm', {
 defineRule("alarm", {
     whenChanged: "global.isTriggeredByLeakage",
     then: function (newValue, devName, cellName) {
-        if (dev["soundAlarm/allowed"] == true) {
+        if (dev["VirtSoundAlarm/allowed"] == true) {
 
         }
     }
