@@ -17,10 +17,8 @@ defineRule("leakageNotification", {
         log.warning("Leakage sensor event! DevName = {}, value = {}", devName, newValue);
         if (newValue === "true" || newValue === true) {
 
-
-            // virtual device flag "triggered by leakage" needs to be set to true here //
-            dev["soundAlarm/isActive"] = true;
-
+            dev["VirtSoundAlarm/triggeredByLeakage"] = true;
+            dev["VirtSoundAlarm/isActive"] = true;
 
             if (devName === "wb-mwac_203") {
                 SendTelegramMsg(1, 'АВАРИЯ! Утечка - проводной датчик ВБ');

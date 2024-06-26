@@ -93,17 +93,22 @@ var soundAlarmCtrl_cells = {
     },
 };
 
-defineVirtualDevice('VirtSoundAlarm', {
+defineVirtualDevice("VirtSoundAlarm", {
     title: "Звуковая сигнализация",
     cells: soundAlarmCtrl_cells
 });
 
 // needs to be done //
 defineRule("activateAlarm", {
-    whenChanged: "dev[VirtSoundAlarm/isActive]",
+    asSoonAs: function() {
+        return dev[VirtSoundAlarm/isActive]; // правило сработает, когда значение параметра изменится на истинное
+    },
     then: function (newValue, devName, cellName) {
         if (dev["VirtSoundAlarm/allowed"] == true) {
-
+            if (dev["VirtSoundAlarm/triggeredByLeakage"] == true || dev["VirtSoundAlarm/triggeredBySmoke"] == true) {
+                dev["buzzer/enabled"] = true;
+                SendTelegramMsg(1, "Активирована сигнализация!");
+            }
         }
     }
 });
