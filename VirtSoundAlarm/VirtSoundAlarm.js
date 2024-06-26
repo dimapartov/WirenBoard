@@ -63,7 +63,34 @@ var soundAlarmCtrl_cells = {
         readonly: false,
         order: 9,
     },
-    // add aux properties here //
+    triggeredByLeakage: {
+        title: "Включена по утечке",
+        type: "switch",
+        value: false,
+        readonly: true,
+        order: 10,
+    },
+    triggeredBySmoke: {
+        title: "Включена по задымлению",
+        type: "switch",
+        value: false,
+        readonly: true,
+        order: 11,
+    },
+    triggeredByReboot: {
+        title: "Включена по перезагрузке контроллера",
+        type: "switch",
+        value: false,
+        readonly: true,
+        order: 12,
+    },
+    triggeredByHumidity: {
+        title: "Включена по влажности в душевой",
+        type: "switch",
+        value: false,
+        readonly: true,
+        order: 13,
+    },
 };
 
 defineVirtualDevice('VirtSoundAlarm', {
@@ -72,8 +99,8 @@ defineVirtualDevice('VirtSoundAlarm', {
 });
 
 // needs to be done //
-defineRule("alarm", {
-    whenChanged: "global.isTriggeredByLeakage",
+defineRule("activateAlarm", {
+    whenChanged: "dev[VirtSoundAlarm/isActive]",
     then: function (newValue, devName, cellName) {
         if (dev["VirtSoundAlarm/allowed"] == true) {
 
