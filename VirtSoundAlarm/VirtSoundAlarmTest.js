@@ -91,6 +91,13 @@ var soundAlarmCtrl_cells = {
         readonly: true,
         order: 13,
     },
+    triggeredOutsideInterval: {
+        title: "Сработала вне разрешенного интервала",
+        type: "switch",
+        value: false,
+        readonly: true,
+        order: 14,
+    },
 };
 
 defineVirtualDevice("VirtSoundAlarm", {
@@ -98,50 +105,87 @@ defineVirtualDevice("VirtSoundAlarm", {
     cells: soundAlarmCtrl_cells
 });
 
+// Function for allowed time interval check
+function isWithinAllowedInterval() {
+    var currentDateTime = new Date();
+    var startDateTime = new Date(currentDateTime);
+    var endDateTime = new Date(currentDateTime);
+
+    startDateTime.setHours(dev["VirtSoundAlarm/beginHH"]);
+    startDateTime.setMinutes(dev["VirtSoundAlarm/beginMM"]);
+
+    endDateTime.setHours(dev["VirtSoundAlarm/endHH"]);
+    endDateTime.setMinutes(dev["VirtSoundAlarm/endMM"]);
+
+    if (endDateTime < startDateTime) {
+        endDateTime.setDate(endDateTime.getDate() + 1);
+    }
+
+    return ((currentDateTime >= startDateTime && currentDateTime <= endDateTime) || dev["VirtSoundAlarm/roundTheClock"]);
+}
+
+// Function for alarm activation
+function activateAlarm() {
+    dev["buzzer/enabled"] = true;
+    SendTelegramMsg(1, "Активирована сигнализация!");
+
+    switch (true) {
+        case dev["VirtSoundAlarm/triggeredByLeakage"]:
+            dev["VirtSoundAlarm/reason"] = "Утечка";
+            break;
+        case dev["VirtSoundAlarm/triggeredBySmoke"]:
+            dev["VirtSoundAlarm/reason"] = "Задымление";
+            break;
+        case dev["VirtSoundAlarm/triggeredByReboot"]:
+            dev["VirtSoundAlarm/reason"] = "Перезагрузка контроллера";
+            break;
+        case dev["VirtSoundAlarm/triggeredByHumidity"]:
+            dev["VirtSoundAlarm/reason"] = "Влажность в душевой";
+            break;
+    }
+}
+
 // -----------------------------------------------------------------------------
 // *** Sound alarm activation ***
 // -----------------------------------------------------------------------------
 defineRule("activateAlarm", {
     asSoonAs: function () {
-        return dev[VirtSoundAlarm/isActive]; // правило сработает, когда значение параметра изменится на истинное
+        return dev["VirtSoundAlarm/isActive"];
     },
     then: function (newValue, devName, cellName) {
         if (dev["VirtSoundAlarm/allowed"] == true) {
-            if (dev["VirtSoundAlarm/triggeredByLeakage"] == true || dev["VirtSoundAlarm/triggeredBySmoke"] == true) { // Утечка или задымление. Без учета времени
-                dev["buzzer/enabled"] = true;
-                SendTelegramMsg(1, "Активирована сигнализация!");
-            } else if (dev["VirtSoundAlarm/triggeredByReboot"] == true || dev["VirtSoundAlarm/triggeredByHumidity"] == true) { // Ребут или влажность. С учетом времени
-                var currentDateTime = new Date();
-                var startDateTime = new Date(currentDateTime);
-                var endDateTime = new Date(currentDateTime);
-
-                startDateTime.setHours(dev["VirtSoundAlarm/beginHH"]); // Начало разрешенного периода. Часы
-                startDateTime.setMinutes(dev["VirtSoundAlarm/beginMM"]); // Начало разрешенного периода. Минуты
-
-                endDateTime.setHours(dev["VirtSoundAlarm/endHH"]); // Конец разрешенного периода. Часы
-                endDateTime.setMinutes(dev["VirtSoundAlarm/endMM"]); // Конец разрешенного периода. Минуты
-
-                if (endDateTime < startDateTime) {
-                    endDateTime.setDate(endDateTime.getDate() + 1);
-                }
-                if ((currentDateTime >= startDateTime && currentDateTime <= endDateTime) || dev["VirtSoundAlarm/roundTheClock"] == true) {
-                    dev["buzzer/enabled"] = true;
-                    SendTelegramMsg(1, "Активирована сигнализация!");
+            if (dev["VirtSoundAlarm/triggeredByLeakage"] == true || dev["VirtSoundAlarm/triggeredBySmoke"] == true) {
+                activateAlarm();
+            } else if (dev["VirtSoundAlarm/triggeredByReboot"] == true || dev["VirtSoundAlarm/triggeredByHumidity"] == true) {
+                if (isWithinAllowedInterval()) {
+                    activateAlarm();
+                } else {
+                    dev["VirtSoundAlarm/triggeredOutsideInterval"] = true;
                 }
             }
-            switch (true) {
-                case dev["VirtSoundAlarm/triggeredByLeakage"]:
-                    dev["VirtSoundAlarm/reason"] = "Утечка";
-                    break;
-                case dev["VirtSoundAlarm/triggeredBySmoke"]:
-                    dev["VirtSoundAlarm/reason"] = "Задымление";
-                    break;
-                case dev["VirtSoundAlarm/triggeredByReboot"]:
-                    dev["VirtSoundAlarm/reason"] = "Перезагрузка контроллера";
-                    break;
-                case dev["VirtSoundAlarm/triggeredByHumidity"]:
-                    dev["VirtSoundAlarm/reason"] = "Влажность в душевой";
-                    break;
+        } else {
+            dev["VirtSoundAlarm/isActive"] = false;
+
+            dev["VirtSoundAlarm/triggeredByLeakage"] = false;
+            dev["VirtSoundAlarm/triggeredBySmoke"] = false;
+            dev["VirtSoundAlarm/triggeredByReboot"] = false;
+            dev["VirtSoundAlarm/triggeredByHumidity"] = false;
+        }
+    }
+});
+
+// -----------------------------------------------------------------------------
+// *** Check time interval for delayed activation ***
+// -----------------------------------------------------------------------------
+defineRule("checkTimeInterval", {
+    when: cron("*/1 * * * *"), // Every minute
+    then: function () {
+        if (dev["VirtSoundAlarm/allowed"] == true && dev["VirtSoundAlarm/isActive"] == false) {
+            if (isWithinAllowedInterval()) {
+                if (dev["VirtSoundAlarm/triggeredOutsideInterval"] = true) {
+                    activateAlarm();
+                    dev["VirtSoundAlarm/triggeredOutsideInterval"] = false;
+                }
             }
         }
     }
