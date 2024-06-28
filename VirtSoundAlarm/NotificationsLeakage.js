@@ -15,7 +15,7 @@ defineRule("leakageNotification", {
     ],
     then: function (newValue, devName, cellName) {
         log.warning("Leakage sensor event! DevName = {}, value = {}", devName, newValue);
-        if (newValue === "true" || newValue === true) {
+        if (newValue == "true" || newValue == true) {
 
             dev["VirtSoundAlarm/triggeredByLeakage"] = true;
             dev["VirtSoundAlarm/isActive"] = true;
