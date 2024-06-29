@@ -7,7 +7,7 @@ var startTime = null;
 defineRule("humidityNotification", {
     whenChanged: ["Humidity sensor-1 (БСУ, щит)/humidity"],
     then: function (newValue, devName, cellName) {
-        var humidity = dev["Humidity sensor-1 (БСУ, щит)/humidity"];
+        var humidity = newValue;
         var doorIsOpen = !dev["Shower door switch/contact"];
 
         if (humidity >= 70 && humidityFlag == false) {
@@ -17,7 +17,7 @@ defineRule("humidityNotification", {
             humidityFlag = false;
         }
 
-        if (humidity > humidityThreshold && doorIsOpen == true) {
+        if ((humidity > humidityThreshold) && (doorIsOpen == true)) {
             if (!timerStarted) {
                 timerStarted = true;
                 startTime = new Date().getTime();
