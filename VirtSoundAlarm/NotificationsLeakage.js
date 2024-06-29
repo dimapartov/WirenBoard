@@ -11,7 +11,9 @@ defineRule("leakageNotification", {
         "Leakage sensor-9 (МСУ, пол)/water_leak",
         "Leakage sensor-10 (Daikin AC - Room4-MSU)/water_leak",
         "Leakage sensor-11 (МСУ, ниша)/water_leak",
-        "wb-mwac_203/F1"
+        "wb-mwac_203/F1",
+        "wb-mwac_203/F2",
+        "wb-mwac_203/F3"
     ],
     then: function (newValue, devName, cellName) {
         log.warning("Leakage sensor event! DevName = {}, value = {}", devName, newValue);
