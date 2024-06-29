@@ -105,7 +105,9 @@ defineVirtualDevice("VirtSoundAlarm", {
     cells: soundAlarmCtrl_cells
 });
 
-// Function for allowed time interval check
+// -----------------------------------------------------------------------------
+// *** Function for allowed time interval check ***
+// -----------------------------------------------------------------------------
 function isWithinAllowedInterval() {
     var currentDateTime = new Date();
     var startDateTime = new Date(currentDateTime);
@@ -124,7 +126,9 @@ function isWithinAllowedInterval() {
     return ((currentDateTime >= startDateTime) && (currentDateTime <= endDateTime));
 }
 
-// Function for alarm activation
+// -----------------------------------------------------------------------------
+// *** Function for sound alarm activation ***
+// -----------------------------------------------------------------------------
 function activateAlarm() {
     dev["buzzer/enabled"] = true;
     SendTelegramMsg(1, "Активирована сигнализация!");
@@ -184,7 +188,7 @@ defineRule("checkTimeInterval", {
     then: function () {
         if (dev["VirtSoundAlarm/allowed"] == true && dev["VirtSoundAlarm/isActive"] == false) {
             if (isWithinAllowedInterval() == true || dev["VirtSoundAlarm/roundTheClock"]) {
-                if (dev["VirtSoundAlarm/triggeredOutsideInterval"] = true) {
+                if (dev["VirtSoundAlarm/triggeredOutsideInterval"] == true) {
                     activateAlarm();
                     dev["VirtSoundAlarm/triggeredOutsideInterval"] = false;
                 }
