@@ -121,7 +121,7 @@ function isWithinAllowedInterval() {
         endDateTime.setDate(endDateTime.getDate() + 1);
     }
 
-    return ((currentDateTime >= startDateTime && currentDateTime <= endDateTime) || dev["VirtSoundAlarm/roundTheClock"]);
+    return ((currentDateTime >= startDateTime) && (currentDateTime <= endDateTime));
 }
 
 // Function for alarm activation
@@ -157,7 +157,7 @@ defineRule("activateAlarm", {
             if (dev["VirtSoundAlarm/triggeredByLeakage"] == true || dev["VirtSoundAlarm/triggeredBySmoke"] == true) {
                 activateAlarm();
             } else if (dev["VirtSoundAlarm/triggeredByReboot"] == true || dev["VirtSoundAlarm/triggeredByHumidity"] == true) {
-                if (isWithinAllowedInterval()) {
+                if (isWithinAllowedInterval() == true || dev["VirtSoundAlarm/roundTheClock"]) {
                     activateAlarm();
                 } else {
                     dev["VirtSoundAlarm/triggeredOutsideInterval"] = true;
@@ -178,10 +178,10 @@ defineRule("activateAlarm", {
 // *** Check time interval for delayed activation ***
 // -----------------------------------------------------------------------------
 defineRule("checkTimeInterval", {
-    when: cron("*/1 * * * *"), // Every minute
+    when: cron("@every 1m"), // Every minute
     then: function () {
         if (dev["VirtSoundAlarm/allowed"] == true && dev["VirtSoundAlarm/isActive"] == false) {
-            if (isWithinAllowedInterval()) {
+            if (isWithinAllowedInterval() == true || dev["VirtSoundAlarm/roundTheClock"]) {
                 if (dev["VirtSoundAlarm/triggeredOutsideInterval"] = true) {
                     activateAlarm();
                     dev["VirtSoundAlarm/triggeredOutsideInterval"] = false;
