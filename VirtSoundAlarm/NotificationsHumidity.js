@@ -1,5 +1,4 @@
 var humidityFlag = false;
-var humidityThreshold = 70;
 var durationThreshold = 30 * 60 * 1000; // milliseconds
 var timerStarted = false;
 var startTime = null;
@@ -10,18 +9,18 @@ defineRule("humidityNotification", {
         var humidity = newValue;
         var doorIsOpen = !dev["Shower door switch/contact"];
 
-        if (humidity >= 70 && humidityFlag == false) {
-            SendTelegramMsg(0, "Уведомление. Влажность в душе достигла 70%");
+        if (humidity >= dev["AuxHumidity/humidityThresholdHi"] && humidityFlag == false) {
+            SendTelegramMsg(0, "Уведомление. Влажность в душе достигла порога");
             humidityFlag = true;
-        } else if (humidity <= 65) {
+        } else if (humidity <= dev["AuxHumidity/humidityThresholdLo"]) {
             humidityFlag = false;
         }
 
-        if ((humidity > humidityThreshold) && (doorIsOpen == true)) {
+        if ((humidity > dev["AuxHumidity/humidityThresholdHi"]) && (doorIsOpen == true)) {
             if (!timerStarted) {
                 timerStarted = true;
-                startTime = new Date().getTime();
-            } else if (new Date().getTime() - startTime >= durationThreshold) {
+                startTime = Date.now();
+            } else if (Date.now() - startTime >= durationThreshold) {
                 dev["VirtSoundAlarm/triggeredByHumidity"] = true;
                 dev["VirtSoundAlarm/isActive"] = true;
                 timerStarted = false;
