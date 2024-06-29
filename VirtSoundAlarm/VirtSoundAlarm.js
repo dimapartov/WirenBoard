@@ -186,7 +186,7 @@ defineRule("activateAlarm", {
 defineRule("checkTimeInterval", {
     when: cron("@every 1m"), // Every minute
     then: function () {
-        if (dev["VirtSoundAlarm/allowed"] == true && dev["VirtSoundAlarm/isActive"] == false) {
+        if (dev["VirtSoundAlarm/allowed"] == true) {
             if (isWithinAllowedInterval() == true || dev["VirtSoundAlarm/roundTheClock"]) {
                 if (dev["VirtSoundAlarm/triggeredOutsideInterval"] == true) {
                     activateAlarm();
@@ -207,7 +207,13 @@ defineRule("deactivateAlarm", {
             dev["buzzer/enabled"] = false;
             dev["VirtSoundAlarm/isActive"] = false;
 
-            SendTelegramMsg(1, "Сигнализация деактивирована");
+            var message = "";
+            if (cellName == "allowed") {
+                message = "Сигнализация деактивирована";
+            } else if (cellName == "turnOffButton") {
+                message = "Сигнализация сброшена";
+            }
+            SendTelegramMsg(1, message);
 
             dev["VirtSoundAlarm/triggeredByLeakage"] = false;
             dev["VirtSoundAlarm/triggeredBySmoke"] = false;
