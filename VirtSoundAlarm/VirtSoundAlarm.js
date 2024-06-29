@@ -167,6 +167,7 @@ defineRule("activateAlarm", {
                     activateAlarm();
                 } else {
                     dev["VirtSoundAlarm/triggeredOutsideInterval"] = true;
+                    dev["VirtSoundAlarm/isActive"] = false;
                 }
             }
         } else {
