@@ -212,6 +212,8 @@ defineRule("deactivateAlarm", {
                 message = "Сигнализация деактивирована";
             } else if (cellName == "turnOffButton") {
                 message = "Сигнализация сброшена";
+            } else {
+                message = "Неизвестное событие сигнализации";
             }
             SendTelegramMsg(1, message);
 
