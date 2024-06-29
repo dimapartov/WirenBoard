@@ -1,9 +1,10 @@
 var auxReboot_cells = {
-    timeFromLastReboot: {
-        title: "Время с последней перезагрузки",
+    rebootFlag: {
+        title: "Флаг перезагрузки",
         type: "text",
-        value: "12345",
+        value: "rebooted",
         readonly: true,
+        forceDefault: true,
         order: 1,
     },
 };
@@ -14,15 +15,12 @@ defineVirtualDevice("AuxReboot", {
 });
 
 defineRule("checkForReboot", {
-    when: cron("*/10 * * * * *"), // Every 10 seconds
+    when: cron("@every 10m"), // Every 10 minutes
     then: function() {
-        var currentUptime = dev["wb-info/uptime"];
-
-        if (currentUptime < dev["AuxReboot/timeFromLastReboot"]) {
-            dev["VirtSoundAlarm/triggeredByReboot"] = true;
+        if (dev["AuxReboot/rebootFlag"] == "rebooted") {
+            dev["VirtSoundAlarm/triggeredByReboot"] = true
             dev["VirtSoundAlarm/isActive"] = true;
         }
-
-        dev["AuxReboot/timeFromLastReboot"] = currentUptime;
+        dev["AuxReboot/rebootFlag"] = "not rebooted";
     }
 });
