@@ -142,6 +142,8 @@ function activateAlarm() {
         case dev["VirtSoundAlarm/triggeredByHumidity"]:
             dev["VirtSoundAlarm/reason"] = "Влажность в душевой";
             break;
+        default:
+            dev["VirtSoundAlarm/reason"] = "Не определено";
     }
 }
 
