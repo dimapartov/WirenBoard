@@ -204,7 +204,7 @@ defineRule("checkTimeInterval", {
 defineRule("deactivateAlarm", {
     whenChanged: ["VirtSoundAlarm/turnOffButton", "VirtSoundAlarm/allowed"],
     then: function (newValue, devName, cellName) {
-        if ((cellName == "turnOffButton") || (cellName == "allowed" && newValue == false)) {
+        if ((cellName == "turnOffButton" && dev["VirtSoundAlarm/isActive"] == true) || (cellName == "allowed" && newValue == false)) {
             dev["buzzer/enabled"] = false;
             dev["VirtSoundAlarm/isActive"] = false;
 
