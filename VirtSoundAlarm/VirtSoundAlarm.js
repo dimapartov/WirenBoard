@@ -163,7 +163,7 @@ defineRule("activateAlarm", {
             if (dev["VirtSoundAlarm/triggeredByLeakage"] == true || dev["VirtSoundAlarm/triggeredBySmoke"] == true) {
                 activateAlarm();
             } else if (dev["VirtSoundAlarm/triggeredByReboot"] == true || dev["VirtSoundAlarm/triggeredByHumidity"] == true) {
-                if (isWithinAllowedInterval() == true || dev["VirtSoundAlarm/roundTheClock"]) {
+                if (isWithinAllowedInterval() == true || dev["VirtSoundAlarm/roundTheClock"] == true) {
                     activateAlarm();
                 } else {
                     dev["VirtSoundAlarm/triggeredOutsideInterval"] = true;
@@ -188,7 +188,7 @@ defineRule("checkTimeInterval", {
     when: cron("@every 1m"), // Every minute
     then: function () {
         if (dev["VirtSoundAlarm/allowed"] == true) {
-            if (isWithinAllowedInterval() == true || dev["VirtSoundAlarm/roundTheClock"]) {
+            if (isWithinAllowedInterval() == true || dev["VirtSoundAlarm/roundTheClock"] == true) {
                 if (dev["VirtSoundAlarm/triggeredOutsideInterval"] == true) {
                     activateAlarm();
                     dev["VirtSoundAlarm/triggeredOutsideInterval"] = false;
@@ -199,12 +199,12 @@ defineRule("checkTimeInterval", {
 });
 
 // -----------------------------------------------------------------------------
-// *** Sound alarm deactivation ***
+// *** Sound alarm reset/deactivation ***
 // -----------------------------------------------------------------------------
 defineRule("deactivateAlarm", {
-    whenChanged: ["dev[VirtSoundAlarm/turnOffButton]", "dev[VirtSoundAlarm/allowed]"],
+    whenChanged: ["VirtSoundAlarm/turnOffButton", "VirtSoundAlarm/allowed"],
     then: function (newValue, devName, cellName) {
-        if ((cellName == "turnOffButton" && newValue == true) || (cellName == "allowed" && newValue == false)) {
+        if ((cellName == "turnOffButton") || (cellName == "allowed" && newValue == false)) {
             dev["buzzer/enabled"] = false;
             dev["VirtSoundAlarm/isActive"] = false;
 
