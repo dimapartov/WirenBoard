@@ -19,13 +19,13 @@ defineRule("leakageNotification", {
         log.warning("Leakage sensor event! DevName = {}, value = {}", devName, newValue);
         if (newValue == "true" || newValue == true) {
 
-            dev["VirtSoundAlarm/triggeredByLeakage"] = true;
-            dev["VirtSoundAlarm/isActive"] = true;
+            dev["SoundAlarm_virt/triggeredByLeakage"] = true;
+            dev["SoundAlarm_virt/isActive"] = true;
 
             if (devName === "wb-mwac_203") {
-                SendTelegramMsg(1, 'АВАРИЯ! Утечка - проводной датчик ВБ');
+                SendTelegramMsg(1, "АВАРИЯ! Утечка - проводной датчик ВБ");
             } else {
-                SendTelegramMsg(1, "АВАРИЯ! Утечка на устройстве {}".format(devName));
+                SendTelegramMsg(1, "АВАРИЯ! Утечка на устройстве {}", devName);
             }
         }
     }

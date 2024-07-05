@@ -1,7 +1,7 @@
 // -----------------------------------------------------------------------------
 // *** Reboot auxiliary device settings (virtual device cells) ***
 // -----------------------------------------------------------------------------
-var auxReboot_cells = {
+var AUX_REBOOT_CELLS = {
     rebootFlag: {
         title: "Флаг перезагрузки",
         type: "text",
@@ -15,7 +15,7 @@ var auxReboot_cells = {
 // -----------------------------------------------------------------------------
 // *** Humidity auxiliary device settings (virtual device cells) ***
 // -----------------------------------------------------------------------------
-var auxHumidity_cells = {
+var AUX_HUMIDITY_CELLS = {
     humidityThresholdHi: {
         title: "Максимальный порог влажности",
         type: "value",
@@ -35,14 +35,14 @@ var auxHumidity_cells = {
 // -----------------------------------------------------------------------------
 // ***  Virtual devices ***
 // -----------------------------------------------------------------------------
-defineVirtualDevice("AuxReboot", {
+defineVirtualDevice("AuxReboot_virt", {
     title: "Время с последней перезагрузки",
-    cells: auxReboot_cells
+    cells: AUX_REBOOT_CELLS
 });
 
-defineVirtualDevice("AuxHumidity", {
+defineVirtualDevice("AuxHumidity_virt", {
     title: "Пороги влажности",
-    cells: auxHumidity_cells
+    cells: AUX_HUMIDITY_CELLS
 });
 
 // -----------------------------------------------------------------------------
@@ -51,10 +51,10 @@ defineVirtualDevice("AuxHumidity", {
 defineRule("checkForReboot", {
     when: cron("@every 10m"), // Every 10 minutes
     then: function() {
-        if (dev["AuxReboot/rebootFlag"] == "rebooted") {
-            dev["VirtSoundAlarm/triggeredByReboot"] = true
-            dev["VirtSoundAlarm/isActive"] = true;
+        if (dev["AuxReboot_virt/rebootFlag"] == "rebooted") {
+            dev["SoundAlarm_virt/triggeredByReboot"] = true
+            dev["SoundAlarm_virt/isActive"] = true;
         }
-        dev["AuxReboot/rebootFlag"] = "not rebooted";
+        dev["AuxReboot_virt/rebootFlag"] = "not rebooted";
     }
 });

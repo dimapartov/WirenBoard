@@ -142,7 +142,10 @@ defineRule("activateAlarm", {
             if (dev["SoundAlarm_virt/triggeredByLeakage"] == true || dev["SoundAlarm_virt/triggeredBySmoke"] == true) {
                 activateAlarm();
             } else if (dev["SoundAlarm_virt/triggeredByReboot"] == true || dev["SoundAlarm_virt/triggeredByHumidity"] == true) {
-                if (IsWithinAllowedInterval(dev["SoundAlarm_virt/beginHH"],dev["SoundAlarm_virt/beginMM"],dev["SoundAlarm_virt/endHH"],dev["SoundAlarm_virt/endMM"]) == true || dev["SoundAlarm_virt/roundTheClock"] == true) {
+                if (IsWithinAllowedInterval(dev["SoundAlarm_virt/beginHH"],
+                                            dev["SoundAlarm_virt/beginMM"],
+                                            dev["SoundAlarm_virt/endHH"],
+                                            dev["SoundAlarm_virt/endMM"]) == true || dev["SoundAlarm_virt/roundTheClock"] == true) {
                     activateAlarm();
                 } else {
                     dev["SoundAlarm_virt/triggeredOutsideInterval"] = true;
@@ -167,7 +170,10 @@ defineRule("checkTimeInterval", {
     when: cron("@every 1m"), // Every minute
     then: function () {
         if (dev["SoundAlarm_virt/allowed"] == true) {
-            if (IsWithinAllowedInterval(dev["SoundAlarm_virt/beginHH"],dev["SoundAlarm_virt/beginMM"],dev["SoundAlarm_virt/endHH"],dev["SoundAlarm_virt/endMM"]) == true || dev["SoundAlarm_virt/roundTheClock"] == true) {
+            if (IsWithinAllowedInterval(dev["SoundAlarm_virt/beginHH"],
+                                        dev["SoundAlarm_virt/beginMM"],
+                                        dev["SoundAlarm_virt/endHH"],
+                                        dev["SoundAlarm_virt/endMM"]) == true || dev["SoundAlarm_virt/roundTheClock"] == true) {
                 if (dev["SoundAlarm_virt/triggeredOutsideInterval"] == true) {
                     activateAlarm();
                     dev["SoundAlarm_virt/triggeredOutsideInterval"] = false;
