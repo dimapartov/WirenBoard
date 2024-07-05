@@ -22,7 +22,7 @@ defineRule("leakageNotification", {
             dev["SoundAlarm_virt/triggeredByLeakage"] = true;
             dev["SoundAlarm_virt/isActive"] = true;
 
-            if (devName === "wb-mwac_203") {
+            if (devName == "wb-mwac_203") {
                 SendTelegramMsg(1, "АВАРИЯ! Утечка - проводной датчик ВБ");
             } else {
                 SendTelegramMsg(1, "АВАРИЯ! Утечка на устройстве {}", devName);

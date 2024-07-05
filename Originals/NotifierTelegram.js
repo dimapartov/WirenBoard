@@ -5,7 +5,7 @@ global.__proto__.SendTelegramMsg = function (priority, msg) {
     for (var i = 0; i < admins.length; i++) {
         runShellCommand(postMsg.format(admins[i], msg));
     }
-    if (priority === 1) {
+    if (priority == 1) {
         for (var i = 0; i < users.length; i++) {
             runShellCommand(postMsg.format(users[i], msg));
         }
