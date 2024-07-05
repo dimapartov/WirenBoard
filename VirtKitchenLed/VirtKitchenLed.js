@@ -115,6 +115,7 @@ defineRule("kitchenMotion", {
     whenChanged: "Motion sensor. Kitchen/occupancy",
     then: function (newValue, devName, cellName) {
         if (dev["KitchenLed_virt/autoEn"] == true) {
+            var offDelay = dev["KitchenLed_virt/offDelay_min"] * 60 * 1000;
             if (newValue == "true") {
                 if (IsWithinAllowedInterval(dev["KitchenLed_virt/autoBeginHH"],
                                             dev["KitchenLed_virt/autoBeginMM"],
