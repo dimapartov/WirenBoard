@@ -1,10 +1,10 @@
-var tmPrefix = "<tsdk> ";
-var logPrefix = "LED: ";
+var TM_PREFIX = "<tsdk> ";
+var LOG_PREFIX = "LED: ";
 
 // -----------------------------------------------------------------------------
 // *** Main Kitchen LED control ***
 // -----------------------------------------------------------------------------
-defineRule('kitchenLed_OnOff', {
+defineRule("kitchenLed_OnOff", {
     whenChanged: "wb-gpio/EXT4_IN1",
     then: function (newValue, devName, cellName) {
         dev["wb-mrgbw-d-fw3_112/Channel 2 (R)"] = !dev["wb-mrgbw-d-fw3_112/Channel 2 (R)"];
@@ -46,7 +46,7 @@ defineRule("kitchenLed_BrightnessCtrl", {
 // -----------------------------------------------------------------------------
 // *** Kitchen LED settings (virtual device cells) ***
 // -----------------------------------------------------------------------------
-var lightAutoCtrl_cells = {
+var KITCHEN_LED_CTRL_CELLS = {
     autoEn: {
         title: "Авто управление",
         type: "switch",
@@ -101,58 +101,46 @@ var lightAutoCtrl_cells = {
     },
 };
 
-defineVirtualDevice('kitchenLedAuto', {
-    title: 'LED лента. Кухня',
-    cells: lightAutoCtrl_cells
+defineVirtualDevice("KitchenLed_virt", {
+    title: "LED лента. Кухня",
+    cells: KITCHEN_LED_CTRL_CELLS
 });
 
 // -----------------------------------------------------------------------------
 // *** Kitchen LED Auto logic ***
 // -----------------------------------------------------------------------------
-var kitchenLed_timerID = null;
+var kitchenLedTimerId = null;
 
-defineRule("kitchen_motion", {
+defineRule("kitchenMotion", {
     whenChanged: "Motion sensor. Kitchen/occupancy",
     then: function (newValue, devName, cellName) {
-        if (dev["kitchenLedAuto/autoEn"] == true) {
-            var date = new Date();
-            var date_start = new Date(date);
-            var date_end = new Date(date);
-            var offDelay = dev["kitchenLedAuto/offDelay_min"] * 60 * 1000;
-
-            date_start.setHours(dev["kitchenLedAuto/autoBeginHH"]);
-            date_start.setMinutes(dev["kitchenLedAuto/autoBeginMM"]);
-
-            date_end.setHours(dev["kitchenLedAuto/autoEndHH"]);
-            date_end.setMinutes(dev["kitchenLedAuto/autoEndMM"]);
-
-            if (date_end < date_start) {
-                date_end.setDate(date_end.getDate() + 1);
-            }
-
+        if (dev["KitchenLed_virt/autoEn"] == true) {
             if (newValue == "true") {
-                if ((date >= date_start && date <= date_end) || dev["kitchenLedAuto/roundTheClock"] == true) {
-                    log(tmPrefix + logPrefix + "{} - motion in Range", devName);
+                if (IsWithinAllowedInterval(dev["KitchenLed_virt/beginHH"],
+                                            dev["KitchenLed_virt/beginMM"],
+                                            dev["KitchenLed_virt/endHH"],
+                                            dev["KitchenLed_virt/endMM"]) == true || dev["KitchenLed_virt/roundTheClock"] == true) {
+                    log(TM_PREFIX + LOG_PREFIX + "{} - motion in Range", devName);
                     dev["wb-mrgbw-d-fw3_112/Channel 2 (R)"] = true;
-                    if (kitchenLed_timerID) {
-                        log(tmPrefix + logPrefix + "{} - countdown aborted!", devName);
-                        clearTimeout(kitchenLed_timerID);
+                    if (kitchenLedTimerId) {
+                        log(TM_PREFIX + LOG_PREFIX + "{} - countdown aborted!", devName);
+                        clearTimeout(kitchenLedTimerId);
                     }
                 } else {
-                    log(tmPrefix + logPrefix + "{} - motion Out of Range", devName);
+                    log(TM_PREFIX + LOG_PREFIX + "{} - motion Out of Range", devName);
                 }
             } else if (newValue == "false") {
-                log(tmPrefix + logPrefix + "{} - motion is Off. Countdown started..", devName);
-                kitchenLed_timerID = setTimeout(function () {
-                    log(tmPrefix + logPrefix + "{} - timer finished. Switching off", devName);
+                log(TM_PREFIX + LOG_PREFIX + "{} - motion is Off. Countdown started..", devName);
+                kitchenLedTimerId = setTimeout(function () {
+                    log(TM_PREFIX + LOG_PREFIX + "{} - timer finished. Switching off", devName);
                     dev["wb-mrgbw-d-fw3_112/Channel 2 (R)"] = false;
-                    kitchenLed_timerID = null;
+                    kitchenLedTimerId = null;
                 }, offDelay);
             } else {
-                log.warning(tmPrefix + logPrefix + "{} - UNDEFINED STATE = {}!", devName, newValue);
+                log.warning(TM_PREFIX + LOG_PREFIX + "{} - UNDEFINED STATE = {}!", devName, newValue);
             }
         } else {
-            log(tmPrefix + logPrefix + "{} - switched {} whilst Auto is disabled", devName, newValue);
+            log(TM_PREFIX + LOG_PREFIX + "{} - switched {} whilst Auto is disabled", devName, newValue);
         }
     }
 });
