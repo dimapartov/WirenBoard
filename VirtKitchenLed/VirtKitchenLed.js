@@ -115,11 +115,12 @@ defineRule("kitchenMotion", {
     whenChanged: "Motion sensor. Kitchen/occupancy",
     then: function (newValue, devName, cellName) {
         if (dev["KitchenLed_virt/autoEn"] == true) {
+            var offDelay = dev["KitchenLed_virt/offDelay_min"] * 60 * 1000;
             if (newValue == "true") {
-                if (IsWithinAllowedInterval(dev["KitchenLed_virt/beginHH"],
-                                            dev["KitchenLed_virt/beginMM"],
-                                            dev["KitchenLed_virt/endHH"],
-                                            dev["KitchenLed_virt/endMM"]) == true || dev["KitchenLed_virt/roundTheClock"] == true) {
+                if (IsWithinAllowedInterval(dev["KitchenLed_virt/autoBeginHH"],
+                                            dev["KitchenLed_virt/autoBeginMM"],
+                                            dev["KitchenLed_virt/autoEndHH"],
+                                            dev["KitchenLed_virt/autoEndMM"]) == true || dev["KitchenLed_virt/roundTheClock"] == true) {
                     log(TM_PREFIX + LOG_PREFIX + "{} - motion in Range", devName);
                     dev["wb-mrgbw-d-fw3_112/Channel 2 (R)"] = true;
                     if (kitchenLedTimerId) {
