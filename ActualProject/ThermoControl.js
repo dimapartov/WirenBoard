@@ -164,7 +164,7 @@ function rangeVerification(value, minRange, maxRange) {
 // -----------------------------------------------------------------------------
 // Updates virtual TS controls from the real sensors
 // -----------------------------------------------------------------------------
-defineRule('updateTemp', {
+defineRule("updateTemp", {
     whenChanged: ["Temperature sensor (переезжающий)/temperature", "Temperature sensor-2/temperature"],
     then: function (newValue, devName, cellName) {
         var isRangeOK = rangeVerification(newValue, temprRangeMin, temprRangeMax);
