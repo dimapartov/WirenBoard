@@ -36,7 +36,7 @@ var AUX_HUMIDITY_CELLS = {
 // ***  Virtual devices ***
 // -----------------------------------------------------------------------------
 defineVirtualDevice("AuxReboot_virt", {
-    title: "Время с последней перезагрузки",
+    title: "Флаг перезагрузки",
     cells: AUX_REBOOT_CELLS
 });
 
