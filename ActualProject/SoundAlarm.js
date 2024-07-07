@@ -175,7 +175,7 @@ defineRule("checkTimeInterval", {
                                         dev["SoundAlarm_virt/endHH"],
                                         dev["SoundAlarm_virt/endMM"]) == true || dev["SoundAlarm_virt/roundTheClock"] == true) {
                 if (dev["SoundAlarm_virt/triggeredOutsideInterval"] == true) {
-                    activateAlarm();
+                    dev["SoundAlarm_virt/isActive"] = true;
                     dev["SoundAlarm_virt/triggeredOutsideInterval"] = false;
                 }
             }
