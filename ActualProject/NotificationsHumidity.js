@@ -1,5 +1,5 @@
 var humidityFlag = false;
-var DURATION_THRESHOLD = 30 * 60 * 1000; // 1 minute in milliseconds
+var DURATION_THRESHOLD = 30 * 60 * 1000; // 30 minute in milliseconds
 var timerStarted = false;
 var startTime = 0;
 
