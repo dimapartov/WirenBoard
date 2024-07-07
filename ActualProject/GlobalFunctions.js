@@ -2,10 +2,10 @@
 // *** Function for time interval check ***
 // -----------------------------------------------------------------------------
 global.__proto__.IsWithinAllowedInterval = function (beginHH, beginMM, endHH, endMM) {
-
     var currentDateTime = new Date();
     var startDateTime = new Date(currentDateTime);
     var endDateTime = new Date(currentDateTime);
+    var midnightTransition = false;
 
     startDateTime.setHours(beginHH);
     startDateTime.setMinutes(beginMM);
@@ -13,8 +13,21 @@ global.__proto__.IsWithinAllowedInterval = function (beginHH, beginMM, endHH, en
     endDateTime.setHours(endHH);
     endDateTime.setMinutes(endMM);
 
-    return ((currentDateTime >= startDateTime) && (currentDateTime.getHours() < 24))
-        || ((currentDateTime <= endDateTime) && (currentDateTime.getHours() >= 0));
+
+    if (endDateTime < startDateTime) {
+        endDateTime.setDate(endDateTime.getDate() + 1);
+        midnightTransition = true;
+    }
+
+    if (currentDateTime >= startDateTime && currentDateTime <= endDateTime) {
+        return true;
+    }
+
+    if ((midnightTransition == true && currentDateTime.getHours() < endHH) || (currentDateTime.getHours() == endHH && currentDateTime.getMinutes() <= endMM)) {
+        return true;
+    }
+
+    return false;
 }
 
 // -----------------------------------------------------------------------------
