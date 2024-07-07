@@ -195,7 +195,7 @@ defineRule("deactivateAlarm", {
 
             var message = "";
             if (cellName == "allowed") {
-                message = "Сигнализация деактивирована";
+                message = "Сигнализация запрещена";
             } else if (cellName == "turnOffButton") {
                 message = "Сигнализация подтверждена";
             } else {
