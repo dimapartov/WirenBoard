@@ -1,13 +1,17 @@
 var humidityFlag = false;
-var DURATION_THRESHOLD = 30 * 60 * 1000; // milliseconds
+var DURATION_THRESHOLD = 30 * 60 * 1000; // 1 minute in milliseconds
 var timerStarted = false;
-var startTime = null;
+var startTime = 0;
 
 defineRule("humidityNotification", {
     whenChanged: ["Humidity sensor-1 (БСУ, щит)/humidity"],
     then: function (newValue, devName, cellName) {
         var humidity = newValue;
-        var doorIsOpen = !dev["Shower door switch/contact"];
+        var doorIsOpen = false;
+
+        if (dev["Shower door switch/contact"] == "false") {
+            doorIsOpen = true;
+        }
 
         if (humidity >= dev["AuxHumidity_virt/humidityThresholdHi"] && humidityFlag == false) {
             SendTelegramMsg(0, "Уведомление. Влажность в душе достигла порога");
@@ -16,8 +20,8 @@ defineRule("humidityNotification", {
             humidityFlag = false;
         }
 
-        if ((humidity > dev["AuxHumidity_virt/humidityThresholdHi"]) && (doorIsOpen == true)) {
-            if (!timerStarted) {
+        if ((humidity >= dev["AuxHumidity_virt/humidityThresholdHi"]) && (doorIsOpen == true)) {
+            if (timerStarted == false) {
                 timerStarted = true;
                 startTime = Date.now();
             } else if (Date.now() - startTime >= DURATION_THRESHOLD) {
