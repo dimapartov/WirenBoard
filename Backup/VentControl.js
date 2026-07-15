@@ -8,7 +8,7 @@ defineRule("turnVentOnSinglePress", {
             pressTime = Date.now();
         } else {
             releaseTime = Date.now();
-            
+
             // Если разница меньше или равна секунде, считаем коротким нажатием
             if ((releaseTime - pressTime) <= 1000) {
                 dev["wb-mr6c_209/K5"] = !dev["wb-mr6c_209/K5"]
