@@ -114,7 +114,7 @@
  */
 
 var topics = {
-    AI_HUMIDITY: "Humidity sensor-1 (БСУ, щит)/humidity",
+    AI_HUMIDITY: "Humidity sensor-2 (БСУ, помещение)/humidity",
     DI_WALL_SWITCH: "wb-gpio/EXT2_IN7",
     DI_DOOR_CLOSED: "Shower door switch/contact",
     DI_MOTION: "Motion sensor-2 (БСУ)/occupancy",
