@@ -1,7 +1,8 @@
+var Prowl = require("ProwlModule");
 defineRule("hourly_prowl_notification", {
-    when: cron("0 0 * * * *"),
+//    when: cron("0 0 * * * *"),
+    when: cron("0 15 10-22 * * *"),
     then: function () {
-        var Prowl = require("ProwlModule");
-        Prowl.send("Тест!", "Текст тестового уведомления провл", 0);
+        Prowl.send("Тест!", "Каждый час текст тестового уведомления провл", 0);
     }
 });
