@@ -188,10 +188,8 @@ defineVirtualDevice("bathroom_fan", {
             value: true
         },
         /*
-         * Все пользовательские выдержки времени теперь задаются в минутах.
-         *
-         * 0.17 минуты приблизительно соответствует прежним 10 секундам.
-         * precision: 2 позволяет задавать дробные значения минут.
+         * Все пользовательские выдержки времени задаются в минутах.
+         * 0.17 минуты приблизительно соответствует 10 секундам.
          */
         on_delay_min: {
             title: "Задержка автоматического включения, мин",
@@ -201,9 +199,6 @@ defineVirtualDevice("bathroom_fan", {
             max: 10,
             precision: 2
         },
-        /*
-         * Прежнее значение 300 секунд соответствует 5 минутам.
-         */
         off_delay_min: {
             title: "Задержка автоматического выключения, мин",
             type: "range",
@@ -213,7 +208,7 @@ defineVirtualDevice("bathroom_fan", {
             precision: 2
         },
         /*
-         * Полностью разрешает или запрещает защиту от слишком долгого
+         * Разрешает или запрещает защиту от слишком долгого
          * ручного выключения вентилятора при высокой влажности.
          */
         humidity_safety_mode: {
@@ -221,9 +216,6 @@ defineVirtualDevice("bathroom_fan", {
             type: "switch",
             value: true
         },
-        /*
-         * Прежнее значение 600 секунд соответствует 10 минутам.
-         */
         manual_off_humidity_timeout_min: {
             title: "Макс. ручное отключение при высокой влажности, мин",
             type: "range",
@@ -255,9 +247,8 @@ var state = {
      */
     manualOverrideAutoCycle: false,
     /*
-     * Используется для различения:
-     * - пользовательского изменения виртуального переключателя;
-     * - программной синхронизации переключателя с физическим реле.
+     * Используется для различения пользовательского изменения виртуального
+     * переключателя и программной синхронизации с физическим реле.
      */
     fanSwitchSyncPending: null,
     lastMotionTime: 0,
@@ -278,9 +269,7 @@ function toBoolean(value) {
     }
     if (typeof value === "string") {
         value = value.toLowerCase();
-        return value === "1" ||
-            value === "true" ||
-            value === "on";
+        return value === "1" || value === "true" || value === "on";
     }
     return false;
 }
@@ -289,11 +278,7 @@ function toBoolean(value) {
  * Поддерживает дробные значения как с точкой, так и с запятой.
  */
 function toNumber(value) {
-    if (
-        value === undefined ||
-        value === null ||
-        value === ""
-    ) {
+    if (value === undefined || value === null || value === "") {
         return NaN;
     }
     if (typeof value === "string") {
@@ -302,38 +287,25 @@ function toNumber(value) {
     return Number(value);
 }
 /*
- * Читает время из виртуального устройства в МИНУТАХ
+ * Читает время из виртуального устройства в минутах
  * и переводит его в миллисекунды для setTimeout().
  *
- * Таким образом, во всём пользовательском интерфейсе используются только
- * минуты, а внутри таймеров wb-rules — только миллисекунды.
- *
- * Некорректное или отрицательное значение воспринимается как нулевая задержка.
+ * Некорректное или отрицательное значение воспринимается
+ * как нулевая задержка.
  */
 function getDelayMilliseconds(controlName) {
-    var minutes =
-        toNumber(dev[controlName]);
-    if (
-        isNaN(minutes) ||
-        minutes < 0
-    ) {
+    var minutes = toNumber(dev[controlName]);
+    if (isNaN(minutes) || minutes < 0) {
         return 0;
     }
-    return Math.round(
-        minutes * 60 * 1000
-    );
+    return Math.round(minutes * 60 * 1000);
 }
 /*
  * Возвращает итоговое автоматическое требование.
- *
- * Вентиляция нужна, если:
- * - активна причина по влажности;
- * ИЛИ
- * - подтверждено присутствие.
+ * Вентиляция нужна при высокой влажности ИЛИ подтверждённом присутствии.
  */
 function getAutomaticDemand() {
-    return state.humidityDemand ||
-        state.presenceDemand;
+    return state.humidityDemand || state.presenceDemand;
 }
 /*
  * Отменяет оба обычных автоматических таймера.
@@ -364,8 +336,8 @@ function clearAllTimers() {
 /*
  * Отправляет требуемое состояние физическому реле.
  *
- * В обычной автоматике команда публикуется только при отличии фактического
- * состояния от требуемого.
+ * В обычной автоматике команда публикуется только при отличии
+ * фактического состояния от требуемого.
  *
  * При ручной команде forceWrite=true позволяет отправить команду даже тогда,
  * когда фактическое значение ещё не успело измениться после предыдущей команды.
@@ -379,16 +351,10 @@ function setFanState(newState, forceWrite) {
 /*
  * Синхронизирует виртуальный переключатель «Вентилятор»
  * с фактическим состоянием физического реле.
- *
- * Виртуальный переключатель является индикатором подтверждённого
- * состояния реле, а не только последней отправленной команды.
  */
 function syncVirtualFanSwitch() {
     var fanValue = dev[topics.DO_FAN];
-    if (
-        fanValue === undefined ||
-        fanValue === null
-    ) {
+    if (fanValue === undefined || fanValue === null) {
         return;
     }
     var actualFanState = toBoolean(fanValue);
@@ -403,7 +369,6 @@ function syncVirtualFanSwitch() {
 }
 /*
  * Проверяет, находится ли фактическая влажность не ниже верхнего порога.
- *
  * Заодно проверяет корректность обоих порогов гистерезиса.
  */
 function isHumidityAtOrAboveUpperThreshold() {
@@ -419,26 +384,15 @@ function isHumidityAtOrAboveUpperThreshold() {
 /*
  * Синхронизирует защитный таймер ручного выключения при высокой влажности.
  *
- * Защитный таймер существует только при ОДНОВРЕМЕННОМ выполнении условий:
+ * Защитный таймер существует только при одновременном выполнении условий:
  * - автоматический режим включён;
  * - защита ручного отключения включена;
  * - действует ручное принудительное выключение;
  * - фактическая влажность не ниже humidity_max.
- *
- * Если защита выключена виртуальным переключателем,
- * активный защитный таймер немедленно отменяется.
- *
- * При повторном включении защиты, если все остальные условия всё ещё
- * выполняются, запускается новый полный отсчёт.
  */
 function syncHumiditySafetyTimer() {
-    var timerRequired =
-        toBoolean(
-            dev[controls.AUTO_MODE]
-        ) &&
-        toBoolean(
-            dev[controls.HUMIDITY_SAFETY_MODE]
-        ) &&
+    var timerRequired = toBoolean(dev[controls.AUTO_MODE]) &&
+        toBoolean(dev[controls.HUMIDITY_SAFETY_MODE]) &&
         state.manualOverride === false &&
         isHumidityAtOrAboveUpperThreshold();
     /*
@@ -470,31 +424,28 @@ function syncHumiditySafetyTimer() {
         setFanState(true, false);
         return;
     }
-    state.humiditySafetyTimer =
-        setTimeout(function () {
-            state.humiditySafetyTimer = null;
-            /*
-             * После завершения выдержки повторно проверяем ВСЕ условия,
-             * включая то, что сама защитная функция всё ещё включена.
-             */
-            var conditionsStillValid =
-                toBoolean(dev[controls.AUTO_MODE]) &&
-                toBoolean(dev[controls.HUMIDITY_SAFETY_MODE]) &&
-                state.manualOverride === false &&
-                isHumidityAtOrAboveUpperThreshold();
-            if (!conditionsStillValid) {
-                return;
-            }
-            state.manualOverride = null;
-            state.manualOverrideAutoCycle = false;
-            clearAutomaticTimers();
-            /*
-             * Защитный таймер уже является выдержкой времени.
-             * Дополнительная автоматическая задержка включения
-             * после него не применяется.
-             */
-            setFanState(true, false);
-        }, delayMilliseconds);
+    state.humiditySafetyTimer = setTimeout(function () {
+        state.humiditySafetyTimer = null;
+        /*
+         * После завершения выдержки повторно проверяем все условия,
+         * включая то, что сама защитная функция всё ещё включена.
+         */
+        var conditionsStillValid = toBoolean(dev[controls.AUTO_MODE]) &&
+            toBoolean(dev[controls.HUMIDITY_SAFETY_MODE]) &&
+            state.manualOverride === false &&
+            isHumidityAtOrAboveUpperThreshold();
+        if (!conditionsStillValid) {
+            return;
+        }
+        state.manualOverride = null;
+        state.manualOverrideAutoCycle = false;
+        clearAutomaticTimers();
+        /*
+         * Защитный таймер уже является выдержкой времени,
+         * поэтому дополнительная задержка включения не применяется.
+         */
+        setFanState(true, false);
+    }, delayMilliseconds);
 }
 /*
  * Запускает автоматическое включение вентилятора
@@ -525,55 +476,33 @@ function requestAutomaticFanOn() {
     /*
      * Уже запущенный таймер не перезапускается.
      */
-    if (
-        state.fanOnTimer !==
-        null
-    ) {
+    if (state.fanOnTimer !== null) {
         return;
     }
-    var delayMilliseconds =
-        getDelayMilliseconds(
-            controls.ON_DELAY
-        );
+    var delayMilliseconds = getDelayMilliseconds(controls.ON_DELAY);
     /*
      * При нулевой выдержке включаем сразу.
      */
     if (delayMilliseconds === 0) {
-        if (
-            toBoolean(
-                dev[controls.AUTO_MODE]
-            ) &&
+        if (toBoolean(dev[controls.AUTO_MODE]) &&
             state.manualOverride === null &&
-            getAutomaticDemand()
-        ) {
-            setFanState(
-                true,
-                false
-            );
+            getAutomaticDemand()) {
+            setFanState(true, false);
         }
         return;
     }
-    state.fanOnTimer =
-        setTimeout(function () {
-            state.fanOnTimer =
-                null;
-            /*
-             * Перед фактическим включением ещё раз проверяем,
-             * что причина никуда не исчезла.
-             */
-            if (
-                toBoolean(
-                    dev[controls.AUTO_MODE]
-                ) &&
-                state.manualOverride === null &&
-                getAutomaticDemand()
-            ) {
-                setFanState(
-                    true,
-                    false
-                );
-            }
-        }, delayMilliseconds);
+    state.fanOnTimer = setTimeout(function () {
+        state.fanOnTimer = null;
+        /*
+         * Перед фактическим включением ещё раз проверяем,
+         * что причина никуда не исчезла.
+         */
+        if (toBoolean(dev[controls.AUTO_MODE]) &&
+            state.manualOverride === null &&
+            getAutomaticDemand()) {
+            setFanState(true, false);
+        }
+    }, delayMilliseconds);
 }
 /*
  * Запускает автоматическое выключение вентилятора
@@ -583,145 +512,82 @@ function requestAutomaticFanOff() {
     /*
      * Если шёл отсчёт включения, он больше не нужен.
      */
-    if (
-        state.fanOnTimer !==
-        null
-    ) {
-        clearTimeout(
-            state.fanOnTimer
-        );
-        state.fanOnTimer =
-            null;
+    if (state.fanOnTimer !== null) {
+        clearTimeout(state.fanOnTimer);
+        state.fanOnTimer = null;
     }
     /*
      * При ручном приоритете или уже выключенном вентиляторе
      * автоматический таймер выключения не нужен.
      */
-    if (
-        state.manualOverride !== null ||
-        !toBoolean(
-            dev[topics.DO_FAN]
-        )
-    ) {
-        if (
-            state.fanOffTimer !==
-            null
-        ) {
-            clearTimeout(
-                state.fanOffTimer
-            );
-            state.fanOffTimer =
-                null;
+    if (state.manualOverride !== null || !toBoolean(dev[topics.DO_FAN])) {
+        if (state.fanOffTimer !== null) {
+            clearTimeout(state.fanOffTimer);
+            state.fanOffTimer = null;
         }
         return;
     }
     /*
      * Уже запущенный таймер не перезапускается.
      */
-    if (
-        state.fanOffTimer !==
-        null
-    ) {
+    if (state.fanOffTimer !== null) {
         return;
     }
-    var delayMilliseconds =
-        getDelayMilliseconds(
-            controls.OFF_DELAY
-        );
+    var delayMilliseconds = getDelayMilliseconds(controls.OFF_DELAY);
     /*
      * При нулевой выдержке выключаем сразу.
      */
     if (delayMilliseconds === 0) {
-        if (
-            toBoolean(
-                dev[controls.AUTO_MODE]
-            ) &&
+        if (toBoolean(dev[controls.AUTO_MODE]) &&
             state.manualOverride === null &&
-            !getAutomaticDemand()
-        ) {
-            setFanState(
-                false,
-                false
-            );
+            !getAutomaticDemand()) {
+            setFanState(false, false);
         }
         return;
     }
-    state.fanOffTimer =
-        setTimeout(function () {
-            state.fanOffTimer =
-                null;
-            /*
-             * Перед выключением повторно проверяем,
-             * что автоматических причин действительно нет.
-             */
-            if (
-                toBoolean(
-                    dev[controls.AUTO_MODE]
-                ) &&
-                state.manualOverride === null &&
-                !getAutomaticDemand()
-            ) {
-                setFanState(
-                    false,
-                    false
-                );
-            }
-        }, delayMilliseconds);
+    state.fanOffTimer = setTimeout(function () {
+        state.fanOffTimer = null;
+        /*
+         * Перед выключением повторно проверяем,
+         * что автоматических причин действительно нет.
+         */
+        if (toBoolean(dev[controls.AUTO_MODE]) &&
+            state.manualOverride === null &&
+            !getAutomaticDemand()) {
+            setFanState(false, false);
+        }
+    }, delayMilliseconds);
 }
 /*
- * Согласует фактическое состояние вентилятора
- * со всеми текущими условиями.
+ * Согласует фактическое состояние вентилятора со всеми текущими условиями.
  *
  * Приоритеты:
- *
  * 1. Отключённый автоматический режим.
- *
  * 2. Ручной приоритет.
- *
  * 3. Автоматические требования:
  *    - влажность;
  *    - присутствие.
  */
 function reconcileFanControl() {
     /*
-     * В полностью ручном режиме обычная автоматика
-     * не должна управлять реле.
+     * В полностью ручном режиме обычная автоматика не должна управлять реле.
      */
-    if (
-        !toBoolean(
-            dev[controls.AUTO_MODE]
-        )
-    ) {
+    if (!toBoolean(dev[controls.AUTO_MODE])) {
         clearAllTimers();
-        if (
-            state.manualOverride !==
-            null
-        ) {
-            setFanState(
-                state.manualOverride,
-                false
-            );
+        if (state.manualOverride !== null) {
+            setFanState(state.manualOverride, false);
         }
         return;
     }
     /*
      * Ручной приоритет выше обычной автоматики.
      */
-    if (
-        state.manualOverride !==
-        null
-    ) {
+    if (state.manualOverride !== null) {
         clearAutomaticTimers();
-        setFanState(
-            state.manualOverride,
-            false
-        );
+        setFanState(state.manualOverride, false);
         /*
-         * Если ручной приоритет = OFF,
-         * здесь при необходимости запустится защитный таймер.
-         *
-         * Если защита отключена, syncHumiditySafetyTimer()
-         * просто убедится, что защитного таймера нет.
+         * При ручном OFF здесь при необходимости запускается защитный таймер.
+         * Если защита отключена, функция просто убедится, что таймера нет.
          */
         syncHumiditySafetyTimer();
         return;
@@ -729,15 +595,9 @@ function reconcileFanControl() {
     /*
      * Без ручного приоритета защитный таймер не нужен.
      */
-    if (
-        state.humiditySafetyTimer !==
-        null
-    ) {
-        clearTimeout(
-            state.humiditySafetyTimer
-        );
-        state.humiditySafetyTimer =
-            null;
+    if (state.humiditySafetyTimer !== null) {
+        clearTimeout(state.humiditySafetyTimer);
+        state.humiditySafetyTimer = null;
     }
     if (getAutomaticDemand()) {
         requestAutomaticFanOn();
@@ -750,48 +610,31 @@ function reconcileFanControl() {
  * закончился ли автоматический цикл, в котором пользователь
  * задал ручной приоритет.
  */
-function handleAutomaticDemandChange(
-    previousAutomaticDemand
-) {
-    var currentAutomaticDemand =
-        getAutomaticDemand();
+function handleAutomaticDemandChange(previousAutomaticDemand) {
+    var currentAutomaticDemand = getAutomaticDemand();
     /*
      * Если ручное решение относилось к текущему автоматическому циклу,
      * то после исчезновения последней автоматической причины
      * оно автоматически снимается.
      */
-    if (
-        state.manualOverride !== null &&
+    if (state.manualOverride !== null &&
         state.manualOverrideAutoCycle &&
-        !currentAutomaticDemand
-    ) {
-        state.manualOverride =
-            null;
-        state.manualOverrideAutoCycle =
-            false;
-        if (
-            state.humiditySafetyTimer !==
-            null
-        ) {
-            clearTimeout(
-                state.humiditySafetyTimer
-            );
-            state.humiditySafetyTimer =
-                null;
+        !currentAutomaticDemand) {
+        state.manualOverride = null;
+        state.manualOverrideAutoCycle = false;
+        if (state.humiditySafetyTimer !== null) {
+            clearTimeout(state.humiditySafetyTimer);
+            state.humiditySafetyTimer = null;
         }
         reconcileFanControl();
         return;
     }
     /*
-     * Состояние защитного таймера необходимо проверять
-     * даже тогда, когда итоговое автоматическое требование
-     * не изменилось.
+     * Защитный таймер необходимо проверять даже тогда,
+     * когда итоговое автоматическое требование не изменилось.
      */
     syncHumiditySafetyTimer();
-    if (
-        previousAutomaticDemand !==
-        currentAutomaticDemand
-    ) {
+    if (previousAutomaticDemand !== currentAutomaticDemand) {
         reconcileFanControl();
     }
 }
@@ -802,86 +645,51 @@ function handleAutomaticDemandChange(
  * текущее требование не сбрасывается.
  */
 function refreshHumidityDemand() {
-    var humidity =
-        toNumber(
-            dev[topics.AI_HUMIDITY]
-        );
-    var humidityMax =
-        toNumber(
-            dev[controls.HUMIDITY_MAX]
-        );
-    var humidityMin =
-        toNumber(
-            dev[controls.HUMIDITY_MIN]
-        );
+    var humidity = toNumber(dev[topics.AI_HUMIDITY]);
+    var humidityMax = toNumber(dev[controls.HUMIDITY_MAX]);
+    var humidityMin = toNumber(dev[controls.HUMIDITY_MIN]);
     /*
      * Проверяем корректность уставок.
      */
-    if (
-        isNaN(humidityMax) ||
-        isNaN(humidityMin) ||
-        humidityMin >= humidityMax
-    ) {
-        if (
-            !state.thresholdsErrorLogged
-        ) {
+    if (isNaN(humidityMax) || isNaN(humidityMin) || humidityMin >= humidityMax) {
+        if (!state.thresholdsErrorLogged) {
             log(
-                "bathroom_fan: неверные пороги влажности: " +
-                "min={}, max={}",
+                "bathroom_fan: неверные пороги влажности: min={}, max={}",
                 humidityMin,
                 humidityMax
             );
-            state.thresholdsErrorLogged =
-                true;
+            state.thresholdsErrorLogged = true;
         }
         return false;
     }
-    state.thresholdsErrorLogged =
-        false;
+    state.thresholdsErrorLogged = false;
     /*
-     * Если датчик влажности недоступен,
-     * сохранённое требование не изменяем.
-     *
-     * Работа по двери и движению при этом
-     * продолжает работать независимо.
+     * Если датчик влажности недоступен, сохранённое требование не изменяем.
+     * Работа по двери и движению при этом продолжает работать независимо.
      */
     if (isNaN(humidity)) {
         return false;
     }
-    var previousHumidityDemand =
-        state.humidityDemand;
+    var previousHumidityDemand = state.humidityDemand;
     /*
      * Верхний порог включает требование.
-     */
-    if (
-        humidity >= humidityMax
-    ) {
-        state.humidityDemand =
-            true;
-    /*
      * Нижний порог снимает требование.
-     */
-    } else if (
-        humidity <= humidityMin
-    ) {
-        state.humidityDemand =
-            false;
-    }
-    /*
      * Между порогами состояние сохраняется.
      */
-    return previousHumidityDemand !==
-        state.humidityDemand;
+    if (humidity >= humidityMax) {
+        state.humidityDemand = true;
+    } else if (humidity <= humidityMin) {
+        state.humidityDemand = false;
+    }
+    return previousHumidityDemand !== state.humidityDemand;
 }
 /*
  * Обрабатывает новое показание влажности
  * или изменение её порогов.
  */
 function processHumidityChange() {
-    var previousAutomaticDemand =
-        getAutomaticDemand();
-    var demandChanged =
-        refreshHumidityDemand();
+    var previousAutomaticDemand = getAutomaticDemand();
+    var demandChanged = refreshHumidityDemand();
     /*
      * Даже если humidityDemand не изменился,
      * фактическая влажность могла перейти через humidity_max,
@@ -891,30 +699,19 @@ function processHumidityChange() {
         syncHumiditySafetyTimer();
         return;
     }
-    handleAutomaticDemandChange(
-        previousAutomaticDemand
-    );
+    handleAutomaticDemandChange(previousAutomaticDemand);
 }
 /*
  * Устанавливает подтверждённое присутствие
  * и пересчитывает требование по двери и движению.
  */
 function setOccupied(newState) {
-    var previousAutomaticDemand =
-        getAutomaticDemand();
-    state.occupied =
-        toBoolean(newState);
-    state.presenceDemand =
-        toBoolean(
-            dev[controls.DOOR_MODE]
-        ) &&
-        toBoolean(
-            dev[topics.DI_DOOR_CLOSED]
-        ) &&
+    var previousAutomaticDemand = getAutomaticDemand();
+    state.occupied = toBoolean(newState);
+    state.presenceDemand = toBoolean(dev[controls.DOOR_MODE]) &&
+        toBoolean(dev[topics.DI_DOOR_CLOSED]) &&
         state.occupied;
-    handleAutomaticDemandChange(
-        previousAutomaticDemand
-    );
+    handleAutomaticDemandChange(previousAutomaticDemand);
 }
 /*
  * Выполняет общую ручную команду для вентилятора.
@@ -923,73 +720,42 @@ function setOccupied(newState) {
  * - настенный пружинный выключатель;
  * - виртуальный переключатель «Вентилятор».
  */
-function applyManualFanState(
-    targetFanState
-) {
-    targetFanState =
-        toBoolean(targetFanState);
-    var automaticDemand =
-        getAutomaticDemand();
+function applyManualFanState(targetFanState) {
+    targetFanState = toBoolean(targetFanState);
+    var automaticDemand = getAutomaticDemand();
     /*
-     * Любая новая ручная команда отменяет
-     * все предыдущие выдержки времени.
+     * Любая новая ручная команда отменяет все предыдущие выдержки времени.
      */
     clearAllTimers();
     /*
      * Если автоматический режим полностью выключен,
-     * команда просто становится постоянным ручным состоянием.
+     * команда становится постоянным ручным состоянием.
      */
-    if (
-        !toBoolean(
-            dev[controls.AUTO_MODE]
-        )
-    ) {
-        state.manualOverride =
-            targetFanState;
-        state.manualOverrideAutoCycle =
-            false;
-        setFanState(
-            targetFanState,
-            true
-        );
+    if (!toBoolean(dev[controls.AUTO_MODE])) {
+        state.manualOverride = targetFanState;
+        state.manualOverrideAutoCycle = false;
+        setFanState(targetFanState, true);
         return;
     }
     /*
-     * Если вентилятор вручную выключается
-     * при отсутствии автоматических причин,
+     * Если вентилятор вручную выключается при отсутствии автоматических причин,
      * постоянный ручной запрет не нужен.
      */
-    if (
-        !targetFanState &&
-        !automaticDemand
-    ) {
-        state.manualOverride =
-            null;
-        state.manualOverrideAutoCycle =
-            false;
-        setFanState(
-            false,
-            true
-        );
+    if (!targetFanState && !automaticDemand) {
+        state.manualOverride = null;
+        state.manualOverrideAutoCycle = false;
+        setFanState(false, true);
         return;
     }
     /*
-     * Во всех остальных случаях сохраняем
-     * полноценный ручной приоритет.
+     * Во всех остальных случаях сохраняем полноценный ручной приоритет.
      */
-    state.manualOverride =
-        targetFanState;
-    state.manualOverrideAutoCycle =
-        automaticDemand;
-    setFanState(
-        targetFanState,
-        true
-    );
+    state.manualOverride = targetFanState;
+    state.manualOverrideAutoCycle = automaticDemand;
+    setFanState(targetFanState, true);
     /*
      * Если это ручное OFF при высокой влажности,
-     * защитный таймер запустится только тогда,
-     * когда соответствующая функция разрешена
-     * виртуальным переключателем.
+     * защитный таймер запустится только при включённой защите.
      */
     syncHumiditySafetyTimer();
 }
@@ -997,59 +763,38 @@ function applyManualFanState(
  * Выполняет короткое нажатие настенного выключателя.
  *
  * Физическая кнопка инвертирует фактическое состояние вентилятора
- * и передаёт полученное значение в общий механизм ручного управления.
+ * и передаёт результат в общий механизм ручного управления.
  */
 function applyManualButtonAction() {
-    applyManualFanState(
-        !toBoolean(
-            dev[topics.DO_FAN]
-        )
-    );
+    applyManualFanState(!toBoolean(dev[topics.DO_FAN]));
 }
 /*
  * Обрабатывает включение и выключение автоматического режима.
  */
-function handleAutoModeChange(
-    enabled
-) {
+function handleAutoModeChange(enabled) {
     clearAllTimers();
     /*
-     * При выключении автоматики сохраняем
-     * фактическое состояние реле как ручное.
+     * При выключении автоматики сохраняем фактическое состояние реле
+     * как ручное.
      */
     if (!toBoolean(enabled)) {
-        var fanValue =
-            dev[topics.DO_FAN];
-        if (
-            fanValue === undefined ||
-            fanValue === null
-        ) {
-            state.manualOverride =
-                null;
+        var fanValue = dev[topics.DO_FAN];
+        if (fanValue === undefined || fanValue === null) {
+            state.manualOverride = null;
         } else {
-            state.manualOverride =
-                toBoolean(fanValue);
+            state.manualOverride = toBoolean(fanValue);
         }
-        state.manualOverrideAutoCycle =
-            false;
+        state.manualOverrideAutoCycle = false;
         return;
     }
     /*
-     * При повторном включении автоматики
-     * старый ручной приоритет сбрасывается.
+     * При повторном включении автоматики старый ручной приоритет сбрасывается.
      */
-    state.manualOverride =
-        null;
-    state.manualOverrideAutoCycle =
-        false;
+    state.manualOverride = null;
+    state.manualOverrideAutoCycle = false;
     refreshHumidityDemand();
-    state.presenceDemand =
-        toBoolean(
-            dev[controls.DOOR_MODE]
-        ) &&
-        toBoolean(
-            dev[topics.DI_DOOR_CLOSED]
-        ) &&
+    state.presenceDemand = toBoolean(dev[controls.DOOR_MODE]) &&
+        toBoolean(dev[topics.DI_DOOR_CLOSED]) &&
         state.occupied;
     reconcileFanControl();
 }
@@ -1059,191 +804,132 @@ function handleAutoModeChange(
  * Если изменение было создано самим скриптом при синхронизации
  * с физическим реле, оно не рассматривается как ручная команда.
  */
-defineRule(
-    "bathroom_fan_virtual_switch",
-    {
-        whenChanged:
-            controls.FAN_SWITCH,
-        then: function (newValue) {
-            if (!state.initialized) {
-                return;
-            }
-            var requestedState =
-                toBoolean(newValue);
-            /*
-             * Служебная синхронизация.
-             */
-            if (
-                state.fanSwitchSyncPending !==
-                    null &&
-                requestedState ===
-                    state.fanSwitchSyncPending
-            ) {
-                state.fanSwitchSyncPending =
-                    null;
-                return;
-            }
-            /*
-             * Любое другое изменение считается
-             * пользовательской ручной командой.
-             */
-            state.fanSwitchSyncPending =
-                null;
-            applyManualFanState(
-                requestedState
-            );
+defineRule("bathroom_fan_virtual_switch", {
+    whenChanged: controls.FAN_SWITCH,
+    then: function (newValue) {
+        if (!state.initialized) {
+            return;
         }
+        var requestedState = toBoolean(newValue);
+        /*
+         * Служебная синхронизация.
+         */
+        if (state.fanSwitchSyncPending !== null &&
+            requestedState === state.fanSwitchSyncPending) {
+            state.fanSwitchSyncPending = null;
+            return;
+        }
+        /*
+         * Любое другое изменение считается пользовательской ручной командой.
+         */
+        state.fanSwitchSyncPending = null;
+        applyManualFanState(requestedState);
     }
-);
+});
 /*
  * Реагирует на изменение показаний датчика влажности.
  */
-defineRule(
-    "bathroom_fan_humidity",
-    {
-        whenChanged:
-            topics.AI_HUMIDITY,
-        then: function () {
-            if (!state.initialized) {
-                return;
-            }
-            processHumidityChange();
+defineRule("bathroom_fan_humidity", {
+    whenChanged: topics.AI_HUMIDITY,
+    then: function () {
+        if (!state.initialized) {
+            return;
         }
+        processHumidityChange();
     }
-);
+});
 /*
  * Пересчитывает влажностную автоматику
  * при изменении верхнего или нижнего порога.
  */
-defineRule(
-    "bathroom_fan_humidity_settings",
-    {
-        whenChanged: [
-            controls.HUMIDITY_MAX,
-            controls.HUMIDITY_MIN
-        ],
-        then: function () {
-            if (!state.initialized) {
-                return;
-            }
-            processHumidityChange();
+defineRule("bathroom_fan_humidity_settings", {
+    whenChanged: [
+        controls.HUMIDITY_MAX,
+        controls.HUMIDITY_MIN
+    ],
+    then: function () {
+        if (!state.initialized) {
+            return;
         }
+        processHumidityChange();
     }
-);
+});
 /*
- * Включает или отключает защиту ручного выключения
- * при высокой влажности.
+ * Включает или отключает защиту ручного выключения при высокой влажности.
  *
- * При выключении активный защитный таймер
- * немедленно отменяется.
+ * При выключении активный защитный таймер немедленно отменяется.
  *
- * При включении, если вентилятор сейчас принудительно
- * выключен вручную и влажность остаётся высокой,
- * запускается новый полный защитный отсчёт.
+ * При включении, если вентилятор сейчас принудительно выключен вручную
+ * и влажность остаётся высокой, запускается новый полный защитный отсчёт.
  */
-defineRule(
-    "bathroom_fan_humidity_safety_mode",
-    {
-        whenChanged:
-            controls.HUMIDITY_SAFETY_MODE,
-        then: function () {
-            if (!state.initialized) {
-                return;
-            }
-            syncHumiditySafetyTimer();
+defineRule("bathroom_fan_humidity_safety_mode", {
+    whenChanged: controls.HUMIDITY_SAFETY_MODE,
+    then: function () {
+        if (!state.initialized) {
+            return;
         }
+        syncHumiditySafetyTimer();
     }
-);
+});
 /*
  * При изменении допустимого времени ручного выключения
- * активный защитный отсчёт начинается заново
- * с нового полного значения.
+ * активный защитный отсчёт начинается заново с нового полного значения.
  *
  * Если защита отключена, новый таймер не запускается.
  */
-defineRule(
-    "bathroom_fan_humidity_safety_timeout",
-    {
-        whenChanged:
-            controls.MANUAL_OFF_HUMIDITY_TIMEOUT,
-        then: function () {
-            if (!state.initialized) {
-                return;
-            }
-            if (
-                state.humiditySafetyTimer !==
-                null
-            ) {
-                clearTimeout(
-                    state.humiditySafetyTimer
-                );
-                state.humiditySafetyTimer =
-                    null;
-            }
-            syncHumiditySafetyTimer();
+defineRule("bathroom_fan_humidity_safety_timeout", {
+    whenChanged: controls.MANUAL_OFF_HUMIDITY_TIMEOUT,
+    then: function () {
+        if (!state.initialized) {
+            return;
         }
+        if (state.humiditySafetyTimer !== null) {
+            clearTimeout(state.humiditySafetyTimer);
+            state.humiditySafetyTimer = null;
+        }
+        syncHumiditySafetyTimer();
     }
-);
+});
 /*
  * Обрабатывает датчик движения.
  *
  * Пропадание движения не означает выход.
- *
  * Движение при открытой двери запоминается для подтверждения входа.
- *
  * Движение при закрытой двери сразу подтверждает присутствие.
  */
-defineRule(
-    "bathroom_fan_motion",
-    {
-        whenChanged:
-            topics.DI_MOTION,
-        then: function (newValue) {
-            if (!state.initialized) {
-                return;
-            }
-            /*
-             * Интересует только появление движения.
-             */
-            if (!toBoolean(newValue)) {
-                return;
-            }
-            state.lastMotionTime =
-                Date.now();
-            /*
-             * Если управление по присутствию отключено,
-             * больше ничего делать не нужно.
-             */
-            if (
-                !toBoolean(
-                    dev[controls.DOOR_MODE]
-                )
-            ) {
-                return;
-            }
-            /*
-             * Движение при открытой двери
-             * запоминаем как возможный вход.
-             */
-            if (
-                !toBoolean(
-                    dev[
-                        topics.DI_DOOR_CLOSED
-                    ]
-                )
-            ) {
-                state.motionSeenSinceDoorOpened =
-                    true;
-                return;
-            }
-            /*
-             * Движение при закрытой двери
-             * подтверждает присутствие.
-             */
-            setOccupied(true);
+defineRule("bathroom_fan_motion", {
+    whenChanged: topics.DI_MOTION,
+    then: function (newValue) {
+        if (!state.initialized) {
+            return;
         }
+        /*
+         * Интересует только появление движения.
+         */
+        if (!toBoolean(newValue)) {
+            return;
+        }
+        state.lastMotionTime = Date.now();
+        /*
+         * Если управление по присутствию отключено,
+         * больше ничего делать не нужно.
+         */
+        if (!toBoolean(dev[controls.DOOR_MODE])) {
+            return;
+        }
+        /*
+         * Движение при открытой двери запоминаем как возможный вход.
+         */
+        if (!toBoolean(dev[topics.DI_DOOR_CLOSED])) {
+            state.motionSeenSinceDoorOpened = true;
+            return;
+        }
+        /*
+         * Движение при закрытой двери подтверждает присутствие.
+         */
+        setOccupied(true);
     }
-);
+});
 /*
  * Обрабатывает концевик двери.
  *
@@ -1252,57 +938,41 @@ defineRule(
  * Закрытие подтверждает новый вход только при наличии
  * свежего движения, зарегистрированного после открытия двери.
  */
-defineRule(
-    "bathroom_fan_door",
-    {
-        whenChanged:
-            topics.DI_DOOR_CLOSED,
-        then: function (newValue) {
-            if (!state.initialized) {
-                return;
-            }
-            var doorClosed =
-                toBoolean(newValue);
-            /*
-             * Дверь открылась — человек больше
-             * не считается подтверждённо находящимся внутри.
-             */
-            if (!doorClosed) {
-                state.motionSeenSinceDoorOpened =
-                    false;
-                setOccupied(false);
-                return;
-            }
-            /*
-             * Если управление по двери отключено,
-             * присутствие не используется.
-             */
-            if (
-                !toBoolean(
-                    dev[controls.DOOR_MODE]
-                )
-            ) {
-                setOccupied(false);
-                return;
-            }
-            /*
-             * Подтверждаем вход только если после открытия двери
-             * было движение и оно произошло не более 30 секунд назад.
-             */
-            var entryConfirmed =
-                state.motionSeenSinceDoorOpened &&
-                state.lastMotionTime > 0 &&
-                Date.now() -
-                    state.lastMotionTime <=
-                    config.ENTRY_CONFIRM_TIME_MS;
-            state.motionSeenSinceDoorOpened =
-                false;
-            setOccupied(
-                entryConfirmed
-            );
+defineRule("bathroom_fan_door", {
+    whenChanged: topics.DI_DOOR_CLOSED,
+    then: function (newValue) {
+        if (!state.initialized) {
+            return;
         }
+        var doorClosed = toBoolean(newValue);
+        /*
+         * Дверь открылась — человек больше
+         * не считается подтверждённо находящимся внутри.
+         */
+        if (!doorClosed) {
+            state.motionSeenSinceDoorOpened = false;
+            setOccupied(false);
+            return;
+        }
+        /*
+         * Если управление по двери отключено,
+         * присутствие не используется.
+         */
+        if (!toBoolean(dev[controls.DOOR_MODE])) {
+            setOccupied(false);
+            return;
+        }
+        /*
+         * Подтверждаем вход только если после открытия двери
+         * было движение и оно произошло не более 30 секунд назад.
+         */
+        var entryConfirmed = state.motionSeenSinceDoorOpened &&
+            state.lastMotionTime > 0 &&
+            Date.now() - state.lastMotionTime <= config.ENTRY_CONFIRM_TIME_MS;
+        state.motionSeenSinceDoorOpened = false;
+        setOccupied(entryConfirmed);
     }
-);
+});
 /*
  * Включает или отключает использование двери и движения.
  *
@@ -1311,76 +981,53 @@ defineRule(
  * При включении закрытая дверь и активное движение
  * сразу считаются подтверждённым присутствием.
  */
-defineRule(
-    "bathroom_fan_door_mode",
-    {
-        whenChanged:
-            controls.DOOR_MODE,
-        then: function (newValue) {
-            if (!state.initialized) {
-                return;
-            }
-            if (!toBoolean(newValue)) {
-                setOccupied(false);
-                return;
-            }
-            setOccupied(
-                toBoolean(
-                    dev[
-                        topics.DI_DOOR_CLOSED
-                    ]
-                ) &&
-                toBoolean(
-                    dev[topics.DI_MOTION]
-                )
-            );
+defineRule("bathroom_fan_door_mode", {
+    whenChanged: controls.DOOR_MODE,
+    then: function (newValue) {
+        if (!state.initialized) {
+            return;
         }
+        if (!toBoolean(newValue)) {
+            setOccupied(false);
+            return;
+        }
+        setOccupied(
+            toBoolean(dev[topics.DI_DOOR_CLOSED]) &&
+            toBoolean(dev[topics.DI_MOTION])
+        );
     }
-);
+});
 /*
- * При изменении задержки автоматического включения
- * или выключения отменяет старый отсчёт и создаёт
- * новый в соответствии с текущим состоянием.
- *
- * Значения в виртуальном устройстве задаются в минутах.
+ * При изменении задержки автоматического включения или выключения
+ * отменяет старый отсчёт и создаёт новый согласно текущему состоянию.
  */
-defineRule(
-    "bathroom_fan_delays",
-    {
-        whenChanged: [
-            controls.ON_DELAY,
-            controls.OFF_DELAY
-        ],
-        then: function () {
-            if (!state.initialized) {
-                return;
-            }
-            clearAutomaticTimers();
-            reconcileFanControl();
+defineRule("bathroom_fan_delays", {
+    whenChanged: [
+        controls.ON_DELAY,
+        controls.OFF_DELAY
+    ],
+    then: function () {
+        if (!state.initialized) {
+            return;
         }
+        clearAutomaticTimers();
+        reconcileFanControl();
     }
-);
+});
 /*
  * Обрабатывает переключатель автоматического режима.
  */
-defineRule(
-    "bathroom_fan_auto_mode",
-    {
-        whenChanged:
-            controls.AUTO_MODE,
-        then: function (newValue) {
-            if (!state.initialized) {
-                return;
-            }
-            handleAutoModeChange(
-                newValue
-            );
+defineRule("bathroom_fan_auto_mode", {
+    whenChanged: controls.AUTO_MODE,
+    then: function (newValue) {
+        if (!state.initialized) {
+            return;
         }
+        handleAutoModeChange(newValue);
     }
-);
+});
 /*
- * Различает короткое и длинное нажатие
- * настенного пружинного выключателя.
+ * Различает короткое и длинное нажатие настенного пружинного выключателя.
  *
  * До 1,5 секунды включительно:
  * - ручное переключение вентилятора.
@@ -1390,108 +1037,73 @@ defineRule(
  *
  * Интервал от 1,5 до 3 секунд игнорируется.
  */
-defineRule(
-    "bathroom_fan_button",
-    {
-        whenChanged:
-            topics.DI_WALL_SWITCH,
-        then: function (newValue) {
-            if (!state.initialized) {
-                return;
-            }
-            /*
-             * Начало нажатия.
-             */
-            if (toBoolean(newValue)) {
-                state.buttonPressTime =
-                    Date.now();
-                return;
-            }
-            /*
-             * Если начала нажатия не было зарегистрировано,
-             * отпускание игнорируем.
-             */
-            if (
-                state.buttonPressTime ===
-                0
-            ) {
-                return;
-            }
-            var pressDuration =
-                Date.now() -
-                state.buttonPressTime;
-            state.buttonPressTime =
-                0;
-            /*
-             * Короткое нажатие.
-             */
-            if (
-                pressDuration <=
-                config.SHORT_PRESS_MAX_MS
-            ) {
-                applyManualButtonAction();
-                return;
-            }
-            /*
-             * Длинное нажатие.
-             */
-            if (
-                pressDuration >=
-                config.LONG_PRESS_MIN_MS
-            ) {
-                dev[controls.AUTO_MODE] =
-                    !toBoolean(
-                        dev[
-                            controls.AUTO_MODE
-                        ]
-                    );
-            }
+defineRule("bathroom_fan_button", {
+    whenChanged: topics.DI_WALL_SWITCH,
+    then: function (newValue) {
+        if (!state.initialized) {
+            return;
+        }
+        /*
+         * Начало нажатия.
+         */
+        if (toBoolean(newValue)) {
+            state.buttonPressTime = Date.now();
+            return;
+        }
+        /*
+         * Если начала нажатия не было зарегистрировано,
+         * отпускание игнорируем.
+         */
+        if (state.buttonPressTime === 0) {
+            return;
+        }
+        var pressDuration = Date.now() - state.buttonPressTime;
+        state.buttonPressTime = 0;
+        /*
+         * Короткое нажатие.
+         */
+        if (pressDuration <= config.SHORT_PRESS_MAX_MS) {
+            applyManualButtonAction();
+            return;
+        }
+        /*
+         * Длинное нажатие.
+         */
+        if (pressDuration >= config.LONG_PRESS_MIN_MS) {
+            dev[controls.AUTO_MODE] = !toBoolean(dev[controls.AUTO_MODE]);
         }
     }
-);
+});
 /*
  * Контролирует фактические изменения физического реле.
  *
  * Сначала синхронизирует виртуальный переключатель
  * с фактическим состоянием.
  *
- * Затем повторно применяет ручной приоритет или
- * решение автоматики, если реле было изменено извне.
+ * Затем повторно применяет ручной приоритет или решение автоматики,
+ * если реле было изменено извне.
  */
-defineRule(
-    "bathroom_fan_relay_feedback",
-    {
-        whenChanged:
-            topics.DO_FAN,
-        then: function (newValue) {
-            if (!state.initialized) {
-                return;
-            }
-            syncVirtualFanSwitch();
-            /*
-             * Если автоматический режим выключен,
-             * а при инициализации состояние реле ещё было неизвестно,
-             * первое полученное состояние принимается как исходное ручное.
-             */
-            if (
-                !toBoolean(
-                    dev[
-                        controls.AUTO_MODE
-                    ]
-                ) &&
-                state.manualOverride ===
-                    null
-            ) {
-                state.manualOverride =
-                    toBoolean(newValue);
-                state.manualOverrideAutoCycle =
-                    false;
-                return;
-            }
-            reconcileFanControl();
+defineRule("bathroom_fan_relay_feedback", {
+    whenChanged: topics.DO_FAN,
+    then: function (newValue) {
+        if (!state.initialized) {
+            return;
         }
+        syncVirtualFanSwitch();
+        /*
+         * Если автоматический режим выключен,
+         * а при инициализации состояние реле ещё было неизвестно,
+         * первое полученное состояние принимается как исходное ручное.
+         */
+        if (!toBoolean(dev[controls.AUTO_MODE]) &&
+            state.manualOverride === null) {
+            state.manualOverride = toBoolean(newValue);
+            state.manualOverrideAutoCycle = false;
+            return;
+        }
+        reconcileFanControl();
     }
-);
+});
 /*
  * Выполняет первоначальную инициализацию после запуска wb-rules.
  *
@@ -1508,136 +1120,81 @@ function initializeController() {
      * Первоначально восстанавливаем требование
      * по текущему значению влажности.
      */
-    var humidity =
-        toNumber(
-            dev[topics.AI_HUMIDITY]
-        );
-    var humidityMax =
-        toNumber(
-            dev[controls.HUMIDITY_MAX]
-        );
-    var humidityMin =
-        toNumber(
-            dev[controls.HUMIDITY_MIN]
-        );
-    if (
-        !isNaN(humidity) &&
+    var humidity = toNumber(dev[topics.AI_HUMIDITY]);
+    var humidityMax = toNumber(dev[controls.HUMIDITY_MAX]);
+    var humidityMin = toNumber(dev[controls.HUMIDITY_MIN]);
+    if (!isNaN(humidity) &&
         !isNaN(humidityMax) &&
         !isNaN(humidityMin) &&
-        humidityMin < humidityMax
-    ) {
-        if (
-            humidity >= humidityMax
-        ) {
-            state.humidityDemand =
-                true;
-        } else if (
-            humidity <= humidityMin
-        ) {
-            state.humidityDemand =
-                false;
+        humidityMin < humidityMax) {
+        if (humidity >= humidityMax) {
+            state.humidityDemand = true;
+        } else if (humidity <= humidityMin) {
+            state.humidityDemand = false;
         }
     }
     /*
      * Если при запуске уже присутствует движение,
      * запоминаем его время.
      */
-    if (
-        toBoolean(
-            dev[topics.DI_MOTION]
-        )
-    ) {
-        state.lastMotionTime =
-            Date.now();
+    if (toBoolean(dev[topics.DI_MOTION])) {
+        state.lastMotionTime = Date.now();
     }
     /*
-     * При запуске присутствие подтверждается,
-     * только если:
+     * При запуске присутствие подтверждается, только если:
      * - управление по присутствию включено;
      * - дверь закрыта;
      * - датчик движения сейчас активен.
      */
-    state.occupied =
-        toBoolean(
-            dev[controls.DOOR_MODE]
-        ) &&
-        toBoolean(
-            dev[
-                topics.DI_DOOR_CLOSED
-            ]
-        ) &&
-        toBoolean(
-            dev[topics.DI_MOTION]
-        );
-    state.presenceDemand =
-        state.occupied;
-    state.motionSeenSinceDoorOpened =
-        false;
-    state.buttonPressTime =
-        0;
-    state.fanSwitchSyncPending =
-        null;
+    state.occupied = toBoolean(dev[controls.DOOR_MODE]) &&
+        toBoolean(dev[topics.DI_DOOR_CLOSED]) &&
+        toBoolean(dev[topics.DI_MOTION]);
+    state.presenceDemand = state.occupied;
+    state.motionSeenSinceDoorOpened = false;
+    state.buttonPressTime = 0;
+    state.fanSwitchSyncPending = null;
     /*
      * В автоматическом режиме старый ручной приоритет
      * после перезапуска не восстанавливается.
      */
-    if (
-        toBoolean(
-            dev[controls.AUTO_MODE]
-        )
-    ) {
-        state.manualOverride =
-            null;
-        state.manualOverrideAutoCycle =
-            false;
-    /*
-     * В ручном режиме сохраняем фактическое состояние вентилятора.
-     */
+    if (toBoolean(dev[controls.AUTO_MODE])) {
+        state.manualOverride = null;
+        state.manualOverrideAutoCycle = false;
     } else {
-        var fanValue =
-            dev[topics.DO_FAN];
-        if (
-            fanValue === undefined ||
-            fanValue === null
-        ) {
+        /*
+         * В ручном режиме сохраняем фактическое состояние вентилятора.
+         */
+        var fanValue = dev[topics.DO_FAN];
+        if (fanValue === undefined || fanValue === null) {
             /*
              * Фактическое состояние пока неизвестно.
              * Первое полученное состояние реле будет принято
              * в bathroom_fan_relay_feedback.
              */
-            state.manualOverride =
-                null;
+            state.manualOverride = null;
         } else {
-            state.manualOverride =
-                toBoolean(fanValue);
+            state.manualOverride = toBoolean(fanValue);
         }
-        state.manualOverrideAutoCycle =
-            false;
+        state.manualOverrideAutoCycle = false;
     }
     /*
      * После подготовки внутреннего состояния
      * разрешаем обработку рабочих событий.
      */
-    state.initialized =
-        true;
+    state.initialized = true;
     /*
      * Сохранённое значение виртуального переключателя
      * заменяется фактическим состоянием реле.
      *
      * Это изменение не станет ручной командой,
-     * так как syncVirtualFanSwitch() выставит
-     * fanSwitchSyncPending.
+     * так как syncVirtualFanSwitch() выставит fanSwitchSyncPending.
      */
     syncVirtualFanSwitch();
     /*
      * В автоматическом режиме сразу передаём
      * управление основной логике.
      */
-    if (
-        toBoolean(
-            dev[controls.AUTO_MODE]
-        )
-    ) {
+    if (toBoolean(dev[controls.AUTO_MODE])) {
         reconcileFanControl();
     }
 }
@@ -1646,10 +1203,7 @@ function initializeController() {
  * чтобы дать физическим MQTT-контролам время получить
  * сохранённые/фактические значения после запуска wb-rules.
  *
- * Все пользовательские выдержки времени задаются отдельно
+ * Все пользовательские выдержки времени задаются
  * в виртуальном устройстве в минутах.
  */
-setTimeout(
-    initializeController,
-    config.STARTUP_DELAY_MS
-);
+setTimeout(initializeController, config.STARTUP_DELAY_MS);
